@@ -8,6 +8,7 @@ import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import Layout from "./components/Layout";
 import Login from "./pages/Login";
+import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import Attendance from "./pages/Attendance";
 import Absences from "./pages/Absences";
@@ -41,6 +42,11 @@ const App = () => (
             <Route path="/login" element={
               <RedirectIfAuthenticated>
                 <Login />
+              </RedirectIfAuthenticated>
+            } />
+            <Route path="/register" element={
+              <RedirectIfAuthenticated>
+                <Register />
               </RedirectIfAuthenticated>
             } />
             

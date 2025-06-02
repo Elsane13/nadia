@@ -1,34 +1,39 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/lib/supabase';
 
-export default function LoginForm() {
+export default function RegisterForm() {
+  const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { signIn } = useAuth();
+  const { signUp } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (password !== confirmPassword) {
+      return setError("Les mots de passe ne correspondent pas");
+    }
+
     setLoading(true);
     setError('');
 
     try {
-      const { error } = await signIn(email, password);
+      const { error } = await signUp(email, password, { full_name: fullName });
       
       if (error) {
-        setError(error.message || 'Une erreur est survenue lors de la connexion');
+        setError(error.message || 'Une erreur est survenue lors de l\'inscription');
         return;
       }
 
-      // Rediriger vers le tableau de bord après connexion réussie
       navigate('/dashboard');
     } catch (err) {
-      setError('Une erreur est survenue lors de la connexion');
-      console.error('Erreur de connexion:', err);
+      setError('Une erreur est survenue lors de l\'inscription');
+      console.error('Erreur d\'inscription:', err);
     } finally {
       setLoading(false);
     }
@@ -38,7 +43,7 @@ export default function LoginForm() {
     <div className="flex min-h-full flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">
-          Connectez-vous à votre compte
+          Créer un compte
         </h2>
       </div>
 
@@ -69,6 +74,27 @@ export default function LoginForm() {
           )}
 
           <form className="space-y-6" onSubmit={handleSubmit}>
+            <div>
+              <label
+                htmlFor="fullName"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Nom complet
+              </label>
+              <div className="mt-1">
+                <input
+                  id="fullName"
+                  name="fullName"
+                  type="text"
+                  autoComplete="name"
+                  required
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                />
+              </div>
+            </div>
+
             <div>
               <label
                 htmlFor="email"
@@ -102,7 +128,7 @@ export default function LoginForm() {
                   id="password"
                   name="password"
                   type="password"
-                  autoComplete="current-password"
+                  autoComplete="new-password"
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -111,40 +137,24 @@ export default function LoginForm() {
               </div>
             </div>
 
-            <div className="flex flex-col space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <input
-                    id="remember-me"
-                    name="remember-me"
-                    type="checkbox"
-                    className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                  />
-                  <label
-                    htmlFor="remember-me"
-                    className="ml-2 block text-sm text-gray-900"
-                  >
-                    Se souvenir de moi
-                  </label>
-                </div>
-
-                <div className="text-sm">
-                  <a
-                    href="/forgot-password"
-                    className="font-medium text-indigo-600 hover:text-indigo-500"
-                  >
-                    Mot de passe oublié ?
-                  </a>
-                </div>
-              </div>
-              
-              <div className="text-center">
-                <Link
-                  to="/register"
-                  className="text-sm font-medium text-indigo-600 hover:text-indigo-500"
-                >
-                  Pas de compte ? <span className="font-semibold">S'inscrire</span>
-                </Link>
+            <div>
+              <label
+                htmlFor="confirm-password"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Confirmer le mot de passe
+              </label>
+              <div className="mt-1">
+                <input
+                  id="confirm-password"
+                  name="confirm-password"
+                  type="password"
+                  autoComplete="new-password"
+                  required
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                />
               </div>
             </div>
 
@@ -152,9 +162,9 @@ export default function LoginForm() {
               <button
                 type="submit"
                 disabled={loading}
-                className={`flex w-full justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
+                className="flex w-full justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50"
               >
-                {loading ? 'Connexion en cours...' : 'Se connecter'}
+                {loading ? 'Inscription en cours...' : 'Créer un compte'}
               </button>
             </div>
           </form>
@@ -165,47 +175,19 @@ export default function LoginForm() {
                 <div className="w-full border-t border-gray-300" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="bg-white px-2 text-gray-500">
-                  Ou continuez avec
-                </span>
+                <span className="bg-white px-2 text-gray-500">Déjà un compte ?</span>
               </div>
             </div>
 
-            <div className="mt-6 grid grid-cols-1 gap-3">
-              <div>
-                <button
-                  type="button"
-                  onClick={async () => {
-                    try {
-                      const { error } = await supabase.auth.signInWithOAuth({
-                        provider: 'google',
-                        options: {
-                          redirectTo: `${window.location.origin}/dashboard`,
-                        },
-                      });
-                      if (error) throw error;
-                    } catch (err) {
-                      setError('Erreur lors de la connexion avec Google');
-                      console.error('Erreur Google OAuth:', err);
-                    }
-                  }}
-                  className="inline-flex w-full justify-center rounded-md border border-gray-300 bg-white py-2 px-4 text-sm font-medium text-gray-500 shadow-sm hover:bg-gray-50"
-                >
-                  <span className="sr-only">Se connecter avec Google</span>
-                  <svg
-                    className="h-5 w-5"
-                    aria-hidden="true"
-                    fill="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z" />
-                  </svg>
-                </button>
-              </div>
+            <div className="mt-6">
+              <Link
+                to="/login"
+                className="flex w-full justify-center rounded-md border border-gray-300 bg-white py-2 px-4 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+              >
+                Se connecter
+              </Link>
             </div>
           </div>
-
-
         </div>
       </div>
     </div>
